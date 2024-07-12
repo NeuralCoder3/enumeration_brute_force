@@ -1,0 +1,37 @@
+[package]
+name = "compute_vec"
+version = "0.1.0"
+edition = "2021"
+default-run = "test_all"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+compressible-map = "0.3.0"
+diskmap = "0.2.0"
+itertools = "0.12.1"
+lazy_static = "1.5.0"
+ocl = "0.19.7"
+priority-queue = "2.0.2"
+rand = "0.8.5"
+rayon = "1.9.0"
+rusqlite = "0.31.0"
+serde = {version = "1.0.197", features = ["derive"]}
+sled = "0.34.7"
+strum = "0.26.3"
+strum_macros = "0.26.4"
+
+
+[features]
+store-candidates = []
+
+default = ["store-candidates"]
+
+# [[bin]]
+# name = "astar"
+# path = "src/main_astar.rs"
+# run with `cargo run --bin astar`
+
+[[bin]]
+name = "test_all"
+path = "src/test_all.rs"
