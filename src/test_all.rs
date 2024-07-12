@@ -56,7 +56,110 @@ enum Instruction {
 
 type Program = Vec<Instruction>;
 
+
+fn execute_instruction(inst: &Instruction, operands: &Vec<i32>) -> i32 {
+    match inst {
+        Instruction::Binary { op, op1, op2 } => {
+            let val1 = if op1.is_constant {
+                op1.value
+            } else {
+                operands[op1.value as usize]
+            };
+            let val2 = if op2.is_constant {
+                op2.value
+            } else {
+                operands[op2.value as usize]
+            };
+
+            let res = match op {
+                BinOp::Add => val1 + val2,
+                BinOp::Sub => val1 - val2,
+                BinOp::And => val1 & val2,
+                BinOp::Xor => val1 ^ val2,
+                BinOp::Or => val1 | val2,
+                BinOp::Shr => val1 >> val2,
+                BinOp::Ule => {
+                    if val1 <= val2 {
+                        1
+                    } else {
+                        0
+                    }
+                }
+                BinOp::Ugt => {
+                    if val1 > val2 {
+                        1
+                    } else {
+                        0
+                    }
+                }
+                BinOp::Uge => {
+                    if val1 >= val2 {
+                        1
+                    } else {
+                        0
+                    }
+                }
+                BinOp::Div => {
+                    if val2 == 0 {
+                        0
+                    } else {
+                        val1 / val2
+                    }
+                }
+            };
+
+            res
+        }
+        Instruction::Unary { op, op1 } => {
+            let val1 = if op1.is_constant {
+                op1.value
+            } else {
+                operands[op1.value as usize]
+            };
+
+            match op {
+                UnOp::Neg => -val1,
+                UnOp::Not => !val1,
+            }
+        }
+    }
+}
+
+fn simulate_program(program: &Program, input: (i32, i32)) -> i32 {
+    let mut operands = vec![input.0, input.1];
+    for inst in program {
+        // println!("    {:?}", operands);
+        let res = execute_instruction(inst, &operands);
+        operands.push(res);
+    }
+    *operands.last().unwrap()
+}
+
+fn print_program(program: &Program) {
+    fn print_operand(op: &Operand) -> String {
+        if op.is_constant {
+            format!("{}", op.value)
+        } else {
+            format!("o{}", op.value)
+        }
+    }
+    for inst in program {
+        match inst {
+            Instruction::Binary { op, op1, op2 } => {
+                println!("{:?}({}, {})", op, print_operand(op1), print_operand(op2));
+            }
+            Instruction::Unary { op, op1 } => {
+                println!("{:?}({})", op, print_operand(op1));
+            }
+        }
+    }
+}
+
+
+
+
 static mut programs: Vec<Program> = vec![];
+// A simple parser would be easier and shorter
 
 fn generate_programs() {
     unsafe {
@@ -352,118 +455,7 @@ fn generate_programs() {
     }
 }
 
-fn execute_instruction(inst: &Instruction, operands: &Vec<i32>) -> i32 {
-    // println!("  {:?}", inst);
-    // println!("  {:?}", operands);
-    match inst {
-        Instruction::Binary { op, op1, op2 } => {
-            let val1 = if op1.is_constant {
-                op1.value
-            } else {
-                operands[op1.value as usize]
-            };
-            let val2 = if op2.is_constant {
-                op2.value
-            } else {
-                operands[op2.value as usize]
-            };
-            // println!("  val2 = {} ({})", val2, op2.value);
 
-            let res = match op {
-                BinOp::Add => val1 + val2,
-                BinOp::Sub => val1 - val2,
-                BinOp::And => val1 & val2,
-                BinOp::Xor => val1 ^ val2,
-                BinOp::Or => val1 | val2,
-                BinOp::Shr => val1 >> val2,
-                BinOp::Ule => {
-                    if val1 <= val2 {
-                        1
-                    } else {
-                        0
-                    }
-                }
-                BinOp::Ugt => {
-                    if val1 > val2 {
-                        1
-                    } else {
-                        0
-                    }
-                }
-                BinOp::Uge => {
-                    if val1 >= val2 {
-                        1
-                    } else {
-                        0
-                    }
-                }
-                BinOp::Div => {
-                    if val2 == 0 {
-                        0
-                    } else {
-                        val1 / val2
-                    }
-                }
-            };
-
-            // println!("  {} {} {} = {}", val1, match op {
-            //     BinOp::Add => "+",
-            //     BinOp::Sub => "-",
-            //     BinOp::And => "&",
-            //     BinOp::Xor => "^",
-            //     BinOp::Or => "|",
-            //     BinOp::Shr => ">>",
-            //     BinOp::Ule => "<=",
-            //     BinOp::Ugt => ">",
-            //     BinOp::Uge => ">=",
-            //     BinOp::Div => "/",
-            // }, val2, res);
-            res
-        }
-        Instruction::Unary { op, op1 } => {
-            let val1 = if op1.is_constant {
-                op1.value
-            } else {
-                operands[op1.value as usize]
-            };
-
-            match op {
-                UnOp::Neg => -val1,
-                UnOp::Not => !val1,
-            }
-        }
-    }
-}
-
-fn simulate_program(program: &Program, input: (i32, i32)) -> i32 {
-    let mut operands = vec![input.0, input.1];
-    for inst in program {
-        // println!("    {:?}", operands);
-        let res = execute_instruction(inst, &operands);
-        operands.push(res);
-    }
-    *operands.last().unwrap()
-}
-
-fn print_program(program: &Program) {
-    fn print_operand(op: &Operand) -> String {
-        if op.is_constant {
-            format!("{}", op.value)
-        } else {
-            format!("o{}", op.value)
-        }
-    }
-    for inst in program {
-        match inst {
-            Instruction::Binary { op, op1, op2 } => {
-                println!("{:?}({}, {})", op, print_operand(op1), print_operand(op2));
-            }
-            Instruction::Unary { op, op1 } => {
-                println!("{:?}({})", op, print_operand(op1));
-            }
-        }
-    }
-}
 
 fn test() {
     // test out one program that was proposed for P15
@@ -573,49 +565,30 @@ fn test() {
         },
     ];
 
-    // let mut rng = rand::thread_rng();
     let mut rng = rand::rngs::StdRng::seed_from_u64(0);
     for _ in 0..5 {
         let x = rng.gen_range(0..100);
         let y = rng.gen_range(0..100);
         let output = simulate_program(&p, (x, y));
 
-        
-
-
         println!("P({}, {}) = {}", x, y, output);
-
-    // let rightOne = x & -x;
-    // // println!("  {} & {} = {}", x, -x, rightOne);
-    // let nextHigherOneBit = x + rightOne;
-    // // println!("  {} + {} = {}", x, rightOne, nextHigherOneBit);
-    // let rightOnesPattern = x ^ nextHigherOneBit;
-    // // println!("  {} ^ {} = {}", x, nextHigherOneBit, rightOnesPattern);
-    // let rightOnesPattern = rightOnesPattern / rightOne;
-    // // println!("  {} / {} = {}", rightOnesPattern, rightOne, rightOnesPattern);
-    // let rightOnesPattern = rightOnesPattern >> 2;
-    // // println!("  {} >> 2 = {}", rightOnesPattern, rightOnesPattern);
-    // let output = nextHigherOneBit | rightOnesPattern;
-    // // println!("  {} | {} = {}", nextHigherOneBit, rightOnesPattern, output);
-
         // binary output
         println!("P({:b}, {:b}) = {:b}", x, y, output);
         println!();
     }
 }
+    
+const PRINT_DEPTH : usize = 0;
 
 fn main() {
     generate_programs();
 
-    test();
-    exit(0);
+    // test();
+    // exit(0);
 
     // let p = unsafe { programs.first().unwrap() };
     let p = unsafe { programs.last().unwrap() };
 
-    // let mut rng = rand::thread_rng();
-    // seed rng
-    // rng = rand::SeedableRng::from_seed([0; 32]);
     let mut rng = rand::rngs::StdRng::seed_from_u64(0);
 
     // generate count many random inputs
@@ -672,12 +645,11 @@ fn main() {
             return;
         }
 
-        let print_depth = 0;
 
         for unop in UnOp::iter() {
             // do not try out constants => unop on constant is always constant => useless
 
-            if depth <= print_depth {
+            if depth <= PRINT_DEPTH {
                 println!("Trying out unop {:?} at depth {}", unop, depth);
             }
 
@@ -703,7 +675,7 @@ fn main() {
         }
 
         for binop in BinOp::iter() {
-            if depth <= print_depth {
+            if depth <= PRINT_DEPTH {
                 println!("Trying out binop {:?} at depth {}", binop, depth);
             }
 
@@ -787,18 +759,4 @@ fn main() {
     //     println!();
     // }
 
-    // Note: The programs are not guaranteed to be correct at this point
-    // but they are filtered using some inputs
-    // here, one would throw the candidates into a SMT solver to verify correctness
-
-    // This program uses a bruteforce approach to generate all possible programs and filters them
-    // => all combinations |> filter
-
-    // A much more efficient approach would be the enumeration approach with deduplication using
-    // input-output examples, this would filter out programs like add(x,y) and add(y,x) which are equivalent
-    // but it might rule out correct ones accidentally this way
-    // in the end, all candidates (possibly with equivalence closure) are thrown into SMT
-    // and if no solution is found, the generated counter example(s) are added to the input-output examples
-    // see my other synthesis repositories for this approach
-    // it is a bit more complicated but much more efficient
 }
