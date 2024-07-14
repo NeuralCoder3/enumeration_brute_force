@@ -2,7 +2,7 @@
 name = "compute_vec"
 version = "0.1.0"
 edition = "2021"
-default-run = "test_all"
+default-run = "bruteforce"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -27,11 +27,11 @@ store-candidates = []
 
 default = ["store-candidates"]
 
-# [[bin]]
-# name = "astar"
-# path = "src/main_astar.rs"
+[[bin]]
+name = "astar"
+path = "src/main_astar.rs"
 # run with `cargo run --bin astar`
 
 [[bin]]
-name = "test_all"
-path = "src/test_all.rs"
+name = "bruteforce"
+path = "src/main_bruteforce.rs"
